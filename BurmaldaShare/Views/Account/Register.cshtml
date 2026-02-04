@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Регистрация в BurmaldaSHARE";
+}
+
+<div class="text-center">
+    <h1>Регистрация</h1>
+    <p class="lead">Создай свой Burmalda-диск прямо сейчас</p>
+</div>
+
+<!-- Блок для отображения ошибки, если она есть -->
+@if (ViewBag.ErrorMessage != null)
+{
+    <div class="alert alert-danger">
+        @ViewBag.ErrorMessage
+    </div>
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <!-- Форма отправляет данные на адрес /Account/Register методом POST -->
+        <form asp-action="Register" method="post">
+            <div class="form-group mb-3">
+                <label class="control-label">Логин</label>
+                <input type="text" name="login" class="form-control" required />
+            </div>
+
+            <div class="form-group mb-3">
+                <label class="control-label">Пароль</label>
+                <input type="password" name="password" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+            </div>
+        </form>
+    </div>
+</div>

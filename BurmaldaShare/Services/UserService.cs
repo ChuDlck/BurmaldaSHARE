@@ -1,5 +1,6 @@
 ﻿using BurmaldaSHARE.Models;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace BurmaldaSHARE.Services
 {
@@ -22,8 +23,15 @@ namespace BurmaldaSHARE.Services
             }
         }
 
-        public void Register(string login, string password)
+        public User Register(string login, string password)
         {
+            string pattern = @"^[a-zA-Z0-9]+$";
+
+            if (!Regex.IsMatch(login, pattern))//проверка логина и пароля на то, что бы он был только из английским символов, чисел и _
+            {
+                throw new Exception("Логин может содержать только английские буквы, цифры и '_'");
+            }
+
             var users = GetAllUsers();
 
             if (users.Any(u => u.Login == login))
@@ -35,6 +43,7 @@ namespace BurmaldaSHARE.Services
 
             var newUser = new User
             {
+                
                 Login = login,
                 Password = HashHelper.HashPassword(password),
                 RootFolderPath = userRootPath
@@ -47,6 +56,7 @@ namespace BurmaldaSHARE.Services
             {
                 Directory.CreateDirectory(newUser.RootFolderPath);
             }
+            return newUser;
         }
 
         private List<User> GetAllUsers()
@@ -68,6 +78,18 @@ namespace BurmaldaSHARE.Services
             string json = JsonSerializer.Serialize(users, options);
 
             File.WriteAllText(fullDbPath, json);
+        }
+        public User? Authenticate(string login, string password)
+        {
+            var users = GetAllUsers();
+            var user = users.FirstOrDefault(u => u.Login == login);
+
+            if (user == null) return null;
+            if (HashHelper.VerifyPassword(password, user.Password))
+            {
+                return user;
+            }
+            return null;
         }
     }
 }

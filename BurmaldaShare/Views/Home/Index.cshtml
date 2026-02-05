@@ -1,8 +1,23 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Главная";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center" style="margin-top: 50px;">
+    <h1 class="display-3">BurmaldaSHARE</h1>
+    <p class="lead">Твое личное облачное хранилище (секретных файлов).</p>
+
+    @if (!User.Identity!.IsAuthenticated)
+    {
+        <div style="margin-top: 30px;">
+            <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Login">Добавиться в файлы Энштейна</a>
+            <br /><br />
+            <p>Нет аккаунта? <a asp-controller="Account" asp-action="Register">Ебни новый!</a></p>
+        </div>
+    }
+    else
+    {
+        <div style="margin-top: 30px;">
+            <a class="btn btn-success btn-lg" href="#">Перейти к моим файлам (скоро(нет))</a>
+        </div>
+    }
 </div>

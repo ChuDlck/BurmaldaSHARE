@@ -6,6 +6,11 @@ namespace BurmaldaSHARE
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddScoped<BurmaldaSHARE.Services.UserService>();
+            builder.Services.AddAuthentication("Cookies").AddCookie(options =>
+            {
+                options.LoginPath = "/Account/Login";//если не залогинен
+                options.ExpireTimeSpan = TimeSpan.FromDays(7);//память куки 7 дней
+            });
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
@@ -21,7 +26,7 @@ namespace BurmaldaSHARE
 
             app.UseHttpsRedirection();
             app.UseRouting();
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapStaticAssets();

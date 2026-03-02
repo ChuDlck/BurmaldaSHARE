@@ -1,6 +1,8 @@
 ﻿using BurmaldaSHARE.Models;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 
 namespace BurmaldaSHARE.Services
 {
@@ -9,23 +11,40 @@ namespace BurmaldaSHARE.Services
         private const string DataFolderName = "BurmaldaData";//папка для рабочих файлов софта
         private const string StorageFolderName = "BurmaldaStorage";//папка для директорий юзеров
         private const string DbFileName = "users.json";//бдшка SQL(json) :D
+        private readonly string _dataFolderPath;
+        private readonly string _storageFolderPath;
 
-        public UserService()
+        public UserService(IWebHostEnvironment env, IConfiguration configuration) //при создании получает корневую папку приложения и значения из appsettings
         {
-            if (!Directory.Exists(DataFolderName))
-            {
-                Directory.CreateDirectory(DataFolderName);
-            }
+            string? dataPathSetting = configuration["Storage:DataPath"]; // берут пути из appsettings
+            string? storagePathSetting = configuration["Storage:StoragePath"];
 
-            if (!Directory.Exists(StorageFolderName))
-            {
-                Directory.CreateDirectory(StorageFolderName);
-            }
+            _dataFolderPath = BuildPath(env.ContentRootPath, dataPathSetting, DataFolderName);
+            _storageFolderPath = BuildPath(env.ContentRootPath, storagePathSetting, StorageFolderName);
+
+            Directory.CreateDirectory(_dataFolderPath);
+            Directory.CreateDirectory(_storageFolderPath);
         }
+        /// <summary>
+        /// Если передали пустую настройку - берет дефолтное название и создает где нибудь
+        /// Если в appsettings есть абсолютный путь, то юзает его
+        /// Если передан относительный путь, юзает его от корня
+        /// </summary>
+        /// <param name="contentRootPath">Полученная корневая папка</param>
+        /// <param name="configuredPath">То, что в appsettings</param>
+        /// <param name="defaultFolderName">Стандартное константное имя папки</param>
+        /// <returns></returns>
+        private static string BuildPath(string contentRootPath, string? configuredPath, string defaultFolderName)
+        {
+            string path = string.IsNullOrWhiteSpace(configuredPath) ? defaultFolderName : configuredPath;
 
+            return Path.IsPathRooted(path)
+                ? path
+                : Path.Combine(contentRootPath, path);
+        }
         public User Register(string login, string password)
         {
-            string pattern = @"^[a-zA-Z0-9]+$";
+            string pattern = @"^[a-zA-Z0-9_]+$";
 
             if (!Regex.IsMatch(login, pattern))//проверка логина и пароля на то, что бы он был только из английским символов, чисел и _
             {
@@ -39,7 +58,7 @@ namespace BurmaldaSHARE.Services
                 throw new Exception("Пользователь уже существует!");
             }
 
-            string userRootPath = Path.Combine(StorageFolderName, login);
+            string userRootPath = Path.Combine(_storageFolderPath, login);
 
             var newUser = new User
             {
@@ -61,7 +80,7 @@ namespace BurmaldaSHARE.Services
 
         private List<User> GetAllUsers()
         {
-            string fullDbPath = Path.Combine(DataFolderName, DbFileName);
+            string fullDbPath = Path.Combine(_dataFolderPath, DbFileName);
 
             if (!File.Exists(fullDbPath))
                 return new List<User>();
@@ -72,7 +91,7 @@ namespace BurmaldaSHARE.Services
 
         private void SaveToFile(List<User> users)
         {
-            string fullDbPath = Path.Combine(DataFolderName, DbFileName);
+            string fullDbPath = Path.Combine(_dataFolderPath, DbFileName);
 
             var options = new JsonSerializerOptions { WriteIndented = true };
             string json = JsonSerializer.Serialize(users, options);
